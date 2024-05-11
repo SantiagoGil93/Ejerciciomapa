@@ -4,53 +4,95 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Jardines Infantiles Bogotá</title>
-    <!-- Incluye Leaflet CSS y JS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-    <!-- Estilo personalizado para el mapa -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
-        #map {
-            height: 600px;
-            width: 800px;
-            margin: 0 auto;
-        }
+    /* Estilo para los puntos */
+    .point {
+        fill: steelblue;
+        stroke: #fff;
+        transition: fill 0.5s;
+    }
+    .point:hover {
+        fill: rgb(255, 0, 0);
+    }
+    .tooltip {
+        position: absolute;
+        text-align: center;
+        width: auto;
+        padding: 2px;
+        font: 12px sans-serif;
+        background: white;
+        border-radius: 8px;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.5s;
+    }
+    h1 {
+        text-align: center;
+        margin-top: 20px;
+    }
+    /* Estilos para centrar el SVG */
+    .map-container {
+        display: flex;
+        justify-content: center;
+    }
     </style>
 </head>
-<body>
 
+<body>
 <h1>Jardines infantiles de Bogotá D.C.</h1>
 <p>Espacio donde se presta servicio diurno y nocturno de Educación Inicial con atención integral a la Primera infancia en el marco de la Ruta Integral de Atenciones -RIA- donde se promueve su desarrollo integral con enfoque diferencial a través de procesos pedagógicos para el potenciamiento del desarrollo, cuidado calificado, apoyo alimentario con calidad y oportunidad y promoción de la corresponsabilidad de las familias, se presta servicio de Educación Inicial con atención integral a la Primera infancia en el marco de la Ruta Integral con enfoque diferencial a través de procesos pedagógicos para el potenciamiento del desarrollo, cuidado calificado, apoyo alimentario con calidad y oportunidad y promoción de la corresponsabilidad de las familias actualizado mes vencido.</p>
 <p>A continuación se muestra la ubicación de todos los jardines infantiles de Bogotá D.C.</p>
 
 <!-- Contenedor para el mapa -->
-<div id="map"></div>
+<div id="map-container" class = "map-container">
+    <div id="tooltip" class="tooltip"></div>
+    <!-- SVG para el mapa -->
+    <svg id="map-svg"></svg>
+</div>
 
 <script>
-    // Inicializa el mapa Leaflet
-    var map = L.map('map').setView([4.60971, -74.081749], 12); // Centra el mapa en Bogotá
-
-    // Agrega el mapa base prediseñado de OpenStreetMap
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-    }).addTo(map);
+    // Crear el lienzo SVG
+    var width = 800, height = 600;
+    var svg = d3.select("#map-svg")
+        .attr("width", width)
+        .attr("height", height);
+    
+    var tooltip = d3.select("#tooltip");
 
     // Cargar datos GeoJSON
-    fetch('https://raw.githubusercontent.com/SantiagoGil93/Ejerciciomapa.github.io/gh-pages/jardines_infantiles_bogota.geojson')
-        .then(response => response.json())
-        .then(data => {
-            // Itera sobre cada punto en el GeoJSON y agrégalo al mapa
-            data.features.forEach(feature => {
-                var marker = L.marker([feature.geometry.coordinates[1], feature.geometry.coordinates[0]])
-                    .addTo(map)
-                    .bindPopup(`
-                        <b>${feature.properties.OSSUOpera || 'Sin nombre'}</b><br/>
-                        Dirección: ${feature.properties.OSSDirecc}<br/>
-                        Teléfono: ${feature.properties.OSSTelefo}<br/>
-                        ${feature.properties.OSSHAtenc}<br/>
-                        ${feature.properties.OSSPBenef}
-                    `);
+    d3.json("jardines_infantiles_bogota.geojson").then(function(data) {
+        // Proyección para convertir coordenadas latitud/longitud a coordenadas de pantalla
+        var projection = d3.geoMercator()
+            .fitSize([width, height], data);
+
+        // Generar la ruta del mapa
+        var path = d3.geoPath().projection(projection);
+
+        // Añadir caminos para cada feature (punto en este caso)
+        svg.selectAll(".point")
+            .data(data.features)
+            .enter().append("path")
+            .attr("class", "point")
+            .attr("d", path)
+            .on("mouseover", function(event, d) {
+                d3.select(this).transition().duration(100).style("fill", "orange");
+                tooltip.transition().duration(200).style("opacity", 0.9);
+                tooltip.html((d.properties.OSSUOpera || "Sin nombre") 
+                                + "<br/>" + "Dirección: " + d.properties.OSSDirecc  
+                                + "<br/>" + "Teléfono: " + d.properties.OSSTelefo 
+                                + "<br/>" + d.properties.OSSHAtenc
+                                + "<br/>" + d.properties.OSSPBenef
+                            )
+                    .style("left", (event.pageX + 10) + "px")
+                    .style("top", (event.pageY - 28) + "px");
+            })
+            .on("mouseout", function() {
+                d3.select(this).transition().duration(100).style("fill", "steelblue");
+                tooltip.transition().duration(200).style("opacity", 0);
             });
-        });
+    });
+
 </script>
 
 <footer><h3>Autor: Santiago Gil Bossa</h3></footer>
