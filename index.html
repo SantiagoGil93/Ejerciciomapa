@@ -3,38 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jardines infantiles en Bogotá</title>
-    <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-
+    <title>Jardines Infantiles Bogotá</title>
+    <!-- Incluye Leaflet CSS y JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <!-- Estilo personalizado para el mapa -->
     <style>
         #map {
             height: 600px;
+            width: 800px;
+            margin: 0 auto;
         }
     </style>
 </head>
 <body>
-    <div id="map"></div>
 
-    <script src="https://d3js.org/d3.v6.min.js"></script>
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-    <script>
-        var map = L.map('map').setView([4.6097, -74.0817], 12);
+<h1>Jardines infantiles de Bogotá D.C.</h1>
+<p>Espacio donde se presta servicio diurno y nocturno de Educación Inicial con atención integral a la Primera infancia en el marco de la Ruta Integral de Atenciones -RIA- donde se promueve su desarrollo integral con enfoque diferencial a través de procesos pedagógicos para el potenciamiento del desarrollo, cuidado calificado, apoyo alimentario con calidad y oportunidad y promoción de la corresponsabilidad de las familias, se presta servicio de Educación Inicial con atención integral a la Primera infancia en el marco de la Ruta Integral con enfoque diferencial a través de procesos pedagógicos para el potenciamiento del desarrollo, cuidado calificado, apoyo alimentario con calidad y oportunidad y promoción de la corresponsabilidad de las familias actualizado mes vencido.</p>
+<p>A continuación se muestra la ubicación de todos los jardines infantiles de Bogotá D.C.</p>
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        }).addTo(map);
+<!-- Contenedor para el mapa -->
+<div id="map"></div>
 
-        var geojsonLayer = new L.GeoJSON.AJAX("jardines_infantiles_bogota.geojson");
+<script>
+    // Inicializa el mapa Leaflet
+    var map = L.map('map').setView([4.60971, -74.081749], 12); // Centra el mapa en Bogotá
 
-        geojsonLayer.on('data:loaded', function() {
-            geojsonLayer.addTo(map);
+    // Agrega el mapa base prediseñado de OpenStreetMap
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+    }).addTo(map);
+
+    // Cargar datos GeoJSON
+    fetch('https://raw.githubusercontent.com/SantiagoGil93/Ejerciciomapa.github.io/gh-pages/jardines_infantiles_bogota.geojson')
+        .then(response => response.json())
+        .then(data => {
+            // Itera sobre cada punto en el GeoJSON y agrégalo al mapa
+            data.features.forEach(feature => {
+                var marker = L.marker([feature.geometry.coordinates[1], feature.geometry.coordinates[0]])
+                    .addTo(map)
+                    .bindPopup(`
+                        <b>${feature.properties.OSSUOpera || 'Sin nombre'}</b><br/>
+                        Dirección: ${feature.properties.OSSDirecc}<br/>
+                        Teléfono: ${feature.properties.OSSTelefo}<br/>
+                        ${feature.properties.OSSHAtenc}<br/>
+                        ${feature.properties.OSSPBenef}
+                    `);
+            });
         });
+</script>
 
-        geojsonLayer.on('click', function(event) {
-            var properties = event.layer.feature.properties;
-            alert("Nombre: " + properties.OSSUOpera + "\nTeléfono: " + properties.OSSTelefo);
-        });
-    </script>
+<footer><h3>Autor: Santiago Gil Bossa</h3></footer>
 </body>
 </html>
