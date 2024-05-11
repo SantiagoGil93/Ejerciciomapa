@@ -4,77 +4,36 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Jardines infantiles en Bogotá</title>
-    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+
     <style>
-        path {
-            fill: steelblue;
-            stroke: white;
-            stroke-width: 0.5;
-        }
-        path:hover {
-            fill: orange;
-        }
-        .tooltip {
-            position: absolute;
-            text-align: center;
-            width: 120px;
-            height: auto;
-            padding: 2px;
-            font: 12px sans-serif;
-            background: white;
-            border: 0px;
-            border-radius: 8px;
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.5s;
-        }
-        h1 {
-            text-align: center;
-            margin-top: 20px;
+        #map {
+            height: 600px;
         }
     </style>
 </head>
 <body>
-    <h1>Jardines infantiles ubicados en Bogotá D.C.</h1>
-    <h3>Actividad desarrollada por: Santiago Gil Bossa</h3>
-    <p>A continuación se puede observar un mapa de la ciudad de Bogotá D.C. con la ubicación de todos los Jardines Infantiles, espacios donde se presta servicio diurno y nocturno de Educación Inicial con atención integral a la Primera infancia en el marco de la Ruta Integral de Atenciones -RIA- donde se promueve su desarrollo integral con enfoque diferencial a través de procesos pedagógicos para el potenciamiento del desarrollo, cuidado calificado, apoyo alimentario con calidad y oportunidad y promoción de la corresponsabilidad de las familias, se presta servicio de Educación Inicial con atención integral a la Primera infancia en el marco de la Ruta Integral con enfoque diferencial a través de procesos pedagógicos para el potenciamiento del desarrollo, cuidado calificado, apoyo alimentario con calidad y oportunidad y promoción de la corresponsabilidad de las familias actualizado mes vencido. </p>
+    <div id="map"></div>
 
     <script src="https://d3js.org/d3.v6.min.js"></script>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script>
-        var width = 800, height = 600;
-        var svg = d3.select("body").append("svg")
-            .attr("width", width)
-            .attr("height", height);
-    
-        var tooltip = d3.select("#tooltip");
-    
-        var projection = d3.geoMercator()
-            .scale(1500)
-            .center([-74, 4])
-            .translate([width / 2, height / 2]);
-    
-        var path = d3.geoPath().projection(projection);
-        
-        d3.json("jardines_infantiles_bogota.geojson").then(function(data) {
-            svg.selectAll("circle")
-                .data(data.features)
-                .enter()
-                .append("circle")
-                .attr("cx", function(d) { return projection(d.geometry.coordinates)[0]; })
-                .attr("cy", function(d) { return projection(d.geometry.coordinates)[1]; })
-                .attr("r", 5)
-                .attr("fill", "steelblue")
-                .on("mouseover", function(event, d) {
-                    d3.select(this).transition().duration(100).style("fill", "orange");
-                    tooltip.transition().duration(200).style("opacity", 0.9);
-                    tooltip.html((d.properties.OSSUOpera || "Sin nombre") + "<br/>" + "Teléfono: " + d.properties.OSSTelefo)
-                        .style("left", (event.pageX + 10) + "px")
-                        .style("top", (event.pageY - 28) + "px");
-                })
-                .on("mouseout", function() {
-                    d3.select(this).transition().duration(100).style("fill", "steelblue");
-                    tooltip.transition().duration(200).style("opacity", 0);
-                });
+        var map = L.map('map').setView([4.6097, -74.0817], 12);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        var geojsonLayer = new L.GeoJSON.AJAX("jardines_infantiles_bogota.geojson");
+
+        geojsonLayer.on('data:loaded', function() {
+            geojsonLayer.addTo(map);
+        });
+
+        geojsonLayer.on('click', function(event) {
+            var properties = event.layer.feature.properties;
+            alert("Nombre: " + properties.OSSUOpera + "\nTeléfono: " + properties.OSSTelefo);
         });
     </script>
 </body>
